@@ -20,13 +20,19 @@ void PrintStrings(char *index[], size_t nlines, const char *REASON);
 int main(void)
 {
     char *index[MAXLINES] = {};
-    const char *file = "Onegin_text.txt";
+    char *temp[MAXLINES] = {};
+    const char *file = "cleaned.txt";
     int nlines = ReadFromFile(file, index);
-    
-    PrintStrings(index, nlines, "READ");
-    Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpRight);
-    PrintStrings(index, nlines, "SORTED");
 
+    for (size_t i = 0; i < nlines; i++)
+        temp[i] = index[i];
+    
+    Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpLeft);
+    PrintStrings(index, nlines, "SORTED_FROM_LEFT");
+    Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpRight);
+    PrintStrings(index, nlines, "SORTED_FROM_RIGHT");
+    PrintStrings(temp, nlines, "READ");
+    
     //for (int i = 0; i < nlines; i++)
     //    free(index[i]);
 
@@ -65,12 +71,12 @@ int StrCmpRight(const void *ptr_at_ptr1, const void *ptr_at_ptr2)
 
     while((len1 && len2) && ((*temp1 == *temp2) || (tolower(*temp1) == tolower(*temp2))))
     {
-        if (!isalpha(*temp1))
-            continue;
         len1--;
         len2--;
         temp1--;
         temp2--;
+        if (!isalpha(*temp1))
+            continue;
     } 
 
     if (*temp1 > *temp2)
@@ -162,5 +168,5 @@ void PrintStrings(char *index[], size_t nlines, const char *REASON)
     printf("%s\n\n", REASON);
     for (; i < nlines; i++)
         printf("%s\n", index[i]);
-    printf("***************************************\n\n\n");
+    printf("***************************************\n\n\n\n\n\n\n\n\n\n\n");
 }
