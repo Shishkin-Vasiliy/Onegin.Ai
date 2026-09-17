@@ -33,8 +33,11 @@ int main(void)
     PrintStrings(index, nlines, "SORTED_FROM_RIGHT");
     PrintStrings(temp, nlines, "READ");
     
-    //for (int i = 0; i < nlines; i++)
-    //    free(index[i]);
+    for (int i = 0; i < nlines; i++)
+    {
+        free(index[i]);
+        free(temp[i]);
+    }
 
     return 0;
 }
