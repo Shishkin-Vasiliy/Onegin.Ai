@@ -5,6 +5,10 @@
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define MAXLINES 10000
 #define MAXLEN 1000
@@ -15,30 +19,33 @@ int StrCmpLeft(const void *s1, const void *s2);
 int StrCmpRight(const void *s1, const void *s2);
 int ReadFromFile(const char *file_name, char *index[]);
 void PrintStrings(char *index[], size_t nlines, const char *REASON);
-
+int ReadFromFileNew(const char *file_name, char **buf, char *index[]);
+int SplitBuf(char **buf, char *index[]);
 
 int main(void)
 {
     char *index[MAXLINES] = {};
-    char *temp[MAXLINES] = {};
-    const char *file = "cleaned.txt";
-    int nlines = ReadFromFile(file, index);
+    //char *temp[MAXLINES] = {};
+    const char *file_name = "temp.txt";
+    char *buf = 0;
+    int nlines = 0;
 
-    for (size_t i = 0; i < nlines; i++)
-        temp[i] = index[i];
+    nlines = ReadFromFileNew(file_name, &buf, index);
+    printf("buf_address = %p\n", buf);
+    printf("buf = <%s>\n", buf);
+    //int nlines = ReadFromFile(file, index);
+
+    //for (size_t i = 0; i < nlines; i++)
+    //    temp[i] = index[i];
     
     Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpLeft);
     PrintStrings(index, nlines, "SORTED_FROM_LEFT");
     Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpRight);
     PrintStrings(index, nlines, "SORTED_FROM_RIGHT");
-    PrintStrings(temp, nlines, "READ");
-    
-    for (int i = 0; i < nlines; i++)
-    {
-        free(index[i]);
-        free(temp[i]);
-    }
+    //PrintStrings(temp, nlines, "READ");
 
+    //for (int i = 0; i < nlines; i++)
+    //    printf("<%s>\n", index[i]);
     return 0;
 }
 
@@ -98,13 +105,7 @@ int ReadFromFile(const char *file, char *index[])
     char buf[MAXLEN] = "";
     size_t i = 0;
     size_t len = 0;
-    
 
-    //
-    //petya^M$    - то что может лежать в txt из за винды 
-    //vasya^M$      (символы \n или \r)
-    //ricardo
-    
     while (!feof(file_ptr) && i < MAXLINES)
     {
         fgets(buf, MAXLEN, file_ptr);
@@ -173,3 +174,52 @@ void PrintStrings(char *index[], size_t nlines, const char *REASON)
         printf("%s\n", index[i]);
     printf("***************************************\n\n\n\n\n\n\n\n\n\n\n");
 }
+
+
+int ReadFromFileNew(const char *file_name, char **buf, char *index[])
+{
+    int file_size = 0;
+    struct stat file_stats = {};
+    int descr = open(file_name, O_RDONLY);
+    int nlines = 0;
+
+    if (descr == EOF)
+        return EOF;
+
+    stat(file_name, &file_stats);
+    file_size = file_stats.st_size; 
+    
+    *buf = (char *)calloc(file_size + 1, 1);
+    read(descr, *buf, file_size);
+
+    *(*buf + file_size) = '\0'; 
+
+    nlines = SplitBuf(buf, index);
+
+    return nlines;
+}
+
+int SplitBuf(char **buf, char *index[])
+{
+    const char *delim_windows = "\r\n";
+    int len_delim_windows = strlen(delim_windows);
+    int i = 0;
+    int nlines = 1;
+
+    index[i] = *buf;
+    while (**buf != '\0')
+    {
+        if (strchr(delim_windows, **buf) != NULL)
+        {
+          **buf = '\0';
+          *buf += len_delim_windows;
+          i++;
+          nlines++;
+          index[i] = *buf;  
+          continue;
+        }
+        (*buf)++;            // приоритет операторов!!!!!!!!!!!!!!!!
+    }
+    return nlines;
+}
+
