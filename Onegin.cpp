@@ -12,40 +12,47 @@
 
 #define MAXLINES 10000
 #define MAXLEN 1000
+#define POIZON_PTR (char *) 13
+#define POIZON_CHAR '@'
 
 void Swap(void *value_a, void *value_b, size_t SizeElem);
 void Qsort(void *data, int left, int right, size_t SizeElem, int (*how_to_compare)(const void *a, const void *b));
 int StrCmpLeft(const void *s1, const void *s2);
 int StrCmpRight(const void *s1, const void *s2);
-int ReadFromFile(const char *file_name, char *index[]);
 void PrintStrings(char *index[], size_t nlines, const char *REASON);
-int ReadFromFileNew(const char *file_name, char **buf, char *index[]);
+int ReadFromFileNew(const char *file_name, char **buf, char *index[], struct stat stat_buf, int descr);
 int SplitBuf(char **buf, char *index[]);
+int OpenFile(const char *file_name, struct stat *stat_buf);
+void FreeBuf(char **buf, int file_size);
 
 int main(void)
 {
     char *index[MAXLINES] = {};
-    //char *temp[MAXLINES] = {};
-    const char *file_name = "temp.txt";
+    char *temp[MAXLINES] = {};
+    const char *file_name = "cleaned.txt";
     char *buf = 0;
     int nlines = 0;
 
-    nlines = ReadFromFileNew(file_name, &buf, index);
-    printf("buf_address = %p\n", buf);
-    printf("buf = <%s>\n", buf);
-    //int nlines = ReadFromFile(file, index);
+    struct stat stat_buf = {};
+    int descr = OpenFile(file_name, &stat_buf);
 
-    //for (size_t i = 0; i < nlines; i++)
-    //    temp[i] = index[i];
+    nlines = ReadFromFileNew(file_name, &buf, index, stat_buf, descr);
+
+    for (size_t i = 0; i < nlines; i++)
+    {
+        temp[i] = index[i];
+    }
     
     Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpLeft);
     PrintStrings(index, nlines, "SORTED_FROM_LEFT");
+
     Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpRight);
     PrintStrings(index, nlines, "SORTED_FROM_RIGHT");
-    //PrintStrings(temp, nlines, "READ");
 
-    //for (int i = 0; i < nlines; i++)
-    //    printf("<%s>\n", index[i]);
+    PrintStrings(temp, nlines, "READ");
+
+    FreeBuf(&buf, stat_buf.st_size);
+
     return 0;
 }
 
@@ -97,42 +104,18 @@ int StrCmpRight(const void *ptr_at_ptr1, const void *ptr_at_ptr2)
         return 0;
 }
 
-int ReadFromFile(const char *file, char *index[])
-{
-    FILE *file_ptr = fopen(file, "r");
-    assert(file);
-
-    char buf[MAXLEN] = "";
-    size_t i = 0;
-    size_t len = 0;
-
-    while (!feof(file_ptr) && i < MAXLINES)
-    {
-        fgets(buf, MAXLEN, file_ptr);
-        len = strlen(buf);
-        while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
-        {
-            buf[len - 1] = '\0';
-            len--;
-        }
-        index[i] = strdup(buf);
-        i++;
-    }
-
-    return i;
-}
-
 void Swap(void *value_a, void *value_b, size_t SizeElem)
 {
     int n = SizeElem;
     uint8_t *a = (uint8_t *)value_a;
     uint8_t *b = (uint8_t *)value_b;
-    
+    uint8_t temp = 0;
+
     do
     {
         n--;
 
-        uint8_t temp = *(a + n);
+        temp = *(a + n);
         *(a + n) = *(b + n);
         *(b + n) = temp;
     } while (n);
@@ -175,19 +158,15 @@ void PrintStrings(char *index[], size_t nlines, const char *REASON)
     printf("***************************************\n\n\n\n\n\n\n\n\n\n\n");
 }
 
-
-int ReadFromFileNew(const char *file_name, char **buf, char *index[])
+int ReadFromFileNew(const char *file_name, char **buf, char *index[], struct stat stat_buf, int descr)
 {
     int file_size = 0;
-    struct stat file_stats = {};
-    int descr = open(file_name, O_RDONLY);
     int nlines = 0;
 
     if (descr == EOF)
         return EOF;
 
-    stat(file_name, &file_stats);
-    file_size = file_stats.st_size; 
+    file_size = stat_buf.st_size;
     
     *buf = (char *)calloc(file_size + 1, 1);
     read(descr, *buf, file_size);
@@ -206,20 +185,40 @@ int SplitBuf(char **buf, char *index[])
     int i = 0;
     int nlines = 1;
 
-    index[i] = *buf;
-    while (**buf != '\0')
+    char *temp = *buf;
+    index[i] = temp;
+    while (*temp != '\0')
     {
-        if (strchr(delim_windows, **buf) != NULL)
+        if (strchr(delim_windows, *temp) != NULL)
         {
-          **buf = '\0';
-          *buf += len_delim_windows;
+          *temp = '\0';
+          temp += len_delim_windows;
           i++;
           nlines++;
-          index[i] = *buf;  
+          while(isspace(*temp))
+            temp++;  
+          index[i] = temp;
           continue;
         }
-        (*buf)++;            // приоритет операторов!!!!!!!!!!!!!!!!
+        temp++;            
     }
     return nlines;
 }
 
+int OpenFile(const char *file_name, struct stat *stat_buf)
+{
+    int descr = open(file_name, O_RDONLY);
+    stat(file_name, stat_buf);
+    return descr;
+}
+
+void FreeBuf(char **buf, int file_size)
+{
+    char *pos = *buf;
+    for (int i = 0; i < file_size + 1; i++)
+    {
+        pos[i] = POIZON_CHAR;
+    }
+    free(*buf);
+    *buf = POIZON_PTR;
+}       
