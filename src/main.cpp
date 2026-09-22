@@ -4,7 +4,7 @@ int main(void)
 {
     char *index[MAXLINES] = {};
     char *temp[MAXLINES] = {};
-    const char *file_name = "cleaned.txt";
+    const char *file_name = "Onegin.txt";
     char *buf = 0;
     int nlines = 0;
 
