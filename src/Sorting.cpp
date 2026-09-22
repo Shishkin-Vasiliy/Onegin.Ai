@@ -1,15 +1,16 @@
 #include "header.h"
 
-void Qsort(void *data, int left, int right, size_t SizeElem, int (*how_to_compare)(const void *a, const void *b))
+int Qsort(void *data, int left, int right, size_t SizeElem, int (*how_to_compare)(const void *a, const void *b))
 {
-    assert(data);
+    if (!data)
+        return EOF;
 
     size_t i = 0;
     size_t last = 0;
     uint8_t *data_ptr = (uint8_t *)data;
 
     if (left >= right)
-        return;
+        return 0;
     
     Swap(data_ptr + left * SizeElem, data_ptr + ((left + right) / 2) * SizeElem, SizeElem);
 
@@ -27,11 +28,14 @@ void Qsort(void *data, int left, int right, size_t SizeElem, int (*how_to_compar
     Swap(data_ptr + left * SizeElem, data_ptr + last * SizeElem, SizeElem);
     Qsort(data, left, last - 1, SizeElem, how_to_compare);
     Qsort(data, last + 1, right, SizeElem, how_to_compare);
+
+    return 0;
 }
 
-void Swap(void *value_a, void *value_b, size_t SizeElem)
+int Swap(void *value_a, void *value_b, size_t SizeElem)
 {
-    assert(value_a && value_b);
+    if ((!value_a) ||  (!value_b))
+        return EOF;
 
     int n = SizeElem;
     uint8_t *a = (uint8_t *)value_a;
@@ -46,6 +50,8 @@ void Swap(void *value_a, void *value_b, size_t SizeElem)
         *(a + n) = *(b + n);
         *(b + n) = temp;
     } while (n);
+
+    return 0;
 }
 
 int StrCmpLeft(const void *ptr_at_ptr1, const void *ptr_at_ptr2)

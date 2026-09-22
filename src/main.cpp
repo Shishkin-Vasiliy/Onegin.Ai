@@ -10,10 +10,10 @@ int main(void)
     int file_size = GetFileSize(file_name);
 
     char **index = (char **)calloc(file_size + 1, sizeof(char *));
-    assert(index);
-
     char **temp  = (char **)calloc(file_size + 1, sizeof(char *));
-    assert(temp);
+
+    if ((!index) || (!temp))
+        return EOF;
 
     nlines = ReadFromFileNew(&buf, index, file_size, descr);
 
@@ -22,7 +22,7 @@ int main(void)
         temp[i] = index[i];
     }
     
-    Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpLeft);
+    qsort(index, nlines, sizeof(index[0]), StrCmpLeft);
     PrintStrings(index, nlines, "SORTED_FROM_LEFT");
 
     Qsort(index, 0, nlines - 1, sizeof(index[0]), StrCmpRight);

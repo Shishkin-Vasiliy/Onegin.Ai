@@ -81,10 +81,10 @@ void PrintStrings(char **index, size_t nlines, const char *REASON)
     printf("***************************************\n\n\n\n\n\n\n\n\n\n\n");
 }
 
-void FreeBuf(char **buf, int file_size)
+int FreeBuf(char **buf, int file_size)
 {
-    assert(buf);
-    assert(*buf);
+    if (!buf)   
+        return EOF;
 
     char *pos = *buf;
     for (int i = 0; i < file_size + 1; i++)
@@ -93,4 +93,6 @@ void FreeBuf(char **buf, int file_size)
     }
     free(*buf);
     *buf = POIZON_PTR;
+
+    return 0;
 } 
