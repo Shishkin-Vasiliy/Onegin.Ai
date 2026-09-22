@@ -24,10 +24,11 @@ void Swap(void *value_a, void *value_b, size_t SizeElem);
 int StrCmpLeft(const void *s1, const void *s2);
 int StrCmpRight(const void *s1, const void *s2);
 
-int OpenFile(const char *file_name, struct stat *stat_buf);
-int ReadFromFileNew(const char *file_name, char **buf, char *index[], struct stat stat_buf, int descr);
-int SplitBuf(char **buf, char *index[]);
-void PrintStrings(char *index[], size_t nlines, const char *REASON);
+int OpenFile(const char *file_name);
+int GetFileSize(const char *file_name);
+int ReadFromFileNew(char **buf, char **index, int file_size, int descr);
+int SplitBuf(char **buf, char **index);
+void PrintStrings(char **index, size_t nlines, const char *REASON);
 void FreeBuf(char **buf, int file_size);
 
 #endif

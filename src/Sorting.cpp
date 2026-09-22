@@ -2,6 +2,8 @@
 
 void Qsort(void *data, int left, int right, size_t SizeElem, int (*how_to_compare)(const void *a, const void *b))
 {
+    assert(data);
+
     size_t i = 0;
     size_t last = 0;
     uint8_t *data_ptr = (uint8_t *)data;
@@ -29,6 +31,8 @@ void Qsort(void *data, int left, int right, size_t SizeElem, int (*how_to_compar
 
 void Swap(void *value_a, void *value_b, size_t SizeElem)
 {
+    assert(value_a && value_b);
+
     int n = SizeElem;
     uint8_t *a = (uint8_t *)value_a;
     uint8_t *b = (uint8_t *)value_b;
@@ -46,6 +50,9 @@ void Swap(void *value_a, void *value_b, size_t SizeElem)
 
 int StrCmpLeft(const void *ptr_at_ptr1, const void *ptr_at_ptr2)
 {
+    if ((!ptr_at_ptr1) || (!ptr_at_ptr2))
+        return EOF;
+
     const char *s1 = *(const char **)ptr_at_ptr1;
     const char *s2 = *(const char **)ptr_at_ptr2;
 
@@ -66,6 +73,9 @@ int StrCmpLeft(const void *ptr_at_ptr1, const void *ptr_at_ptr2)
 
 int StrCmpRight(const void *ptr_at_ptr1, const void *ptr_at_ptr2)
 {
+    if ((!ptr_at_ptr1) || (!ptr_at_ptr2))
+        return EOF;
+
     const char *s1 = *(const char **)ptr_at_ptr1;
     const char *s2 = *(const char **)ptr_at_ptr2;
     size_t len1 = strlen(s1);

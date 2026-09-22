@@ -2,16 +2,20 @@
 
 int main(void)
 {
-    char *index[MAXLINES] = {};
-    char *temp[MAXLINES] = {};
     const char *file_name = "Onegin.txt";
-    char *buf = 0;
+    char *buf = POIZON_PTR; 
     int nlines = 0;
 
-    struct stat stat_buf = {};
-    int descr = OpenFile(file_name, &stat_buf);
+    int descr = OpenFile(file_name);
+    int file_size = GetFileSize(file_name);
 
-    nlines = ReadFromFileNew(file_name, &buf, index, stat_buf, descr);
+    char **index = (char **)calloc(file_size + 1, sizeof(char *));
+    assert(index);
+
+    char **temp  = (char **)calloc(file_size + 1, sizeof(char *));
+    assert(temp);
+
+    nlines = ReadFromFileNew(&buf, index, file_size, descr);
 
     for (size_t i = 0; i < nlines; i++)
     {
@@ -26,7 +30,7 @@ int main(void)
 
     PrintStrings(temp, nlines, "READ");
 
-    FreeBuf(&buf, stat_buf.st_size);
+    FreeBuf(&buf, file_size);
 
     return 0;
 }

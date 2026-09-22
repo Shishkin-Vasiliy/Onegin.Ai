@@ -1,61 +1,78 @@
 #include "header.h"
 
-int OpenFile(const char *file_name, struct stat *stat_buf)
+int OpenFile(const char *file_name)
 {
     int descr = open(file_name, O_RDONLY);
-    stat(file_name, stat_buf);
     return descr;
 }
 
-int ReadFromFileNew(const char *file_name, char **buf, char *index[], struct stat stat_buf, int descr)
+int GetFileSize(const char *file_name)
 {
-    int file_size = 0;
+    struct stat stat_buf = {};
+    stat(file_name, &stat_buf);
+    int file_size = stat_buf.st_size;
+
+    return file_size;
+}
+
+int ReadFromFileNew(char **buf, char **index, int file_size, int descr)
+{
+    if (!index)
+        return EOF;
+
     int nlines = 0;
 
     if (descr == EOF)
         return EOF;
 
-    file_size = stat_buf.st_size;
-    
-    *buf = (char *)calloc(file_size + 1, 1);
+    *buf = (char *)calloc(file_size + 1, sizeof(char));
+    if (!(*buf))
+        return EOF;
+
     read(descr, *buf, file_size);
 
-    *(*buf + file_size) = '\0'; 
+    *(*buf + file_size + 1) = '\0'; 
 
     nlines = SplitBuf(buf, index);
 
     return nlines;
 }
 
-int SplitBuf(char **buf, char *index[])
+int SplitBuf(char **buf, char **index)
 {
-    const char *delim_windows = "\r\n";
-    int len_delim_windows = strlen(delim_windows);
+    if (!buf)
+        return EOF;
+
     int i = 0;
     int nlines = 1;
 
     char *temp = *buf;
     index[i] = temp;
+
     while (*temp != '\0')
     {
-        if (strchr(delim_windows, *temp) != NULL)
+        if (*temp == '\n')
         {
-          *temp = '\0';
-          temp += len_delim_windows;
-          i++;
-          nlines++;
-          while(isspace(*temp))
-            temp++;  
-          index[i] = temp;
-          continue;
+            *temp = '\0';
+            temp++;
+            i++;
+            nlines++;
+            while(isspace(*temp))
+                temp++;  
+            index[i] = temp;
+            continue;
         }
-        temp++;            
+        else
+            temp++;            
     }
     return nlines;
 }
 
-void PrintStrings(char *index[], size_t nlines, const char *REASON)
+void PrintStrings(char **index, size_t nlines, const char *REASON)
 {
+    assert(index);
+    assert(*index);
+
     size_t i = 0;
 
     printf("%s\n\n", REASON);
@@ -66,6 +83,9 @@ void PrintStrings(char *index[], size_t nlines, const char *REASON)
 
 void FreeBuf(char **buf, int file_size)
 {
+    assert(buf);
+    assert(*buf);
+
     char *pos = *buf;
     for (int i = 0; i < file_size + 1; i++)
     {

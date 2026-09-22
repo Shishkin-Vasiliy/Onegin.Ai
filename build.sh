@@ -1,2 +1,2 @@
 g++ src/*.cpp \
--Iinclude \
+-Iinclude -DNDEBUG \
